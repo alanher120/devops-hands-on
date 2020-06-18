@@ -42,7 +42,7 @@ sleep 3
 sudo microk8s.kubectl patch $(sudo microk8s.kubectl get user.management.cattle.io -l authz.management.cattle.io/bootstrapping=admin-user -o name) --type='json' -p '[{"op":"replace","path":"/mustChangePassword","value":false},{"op":"replace","path":"/password","value":"$2a$10$7BhfjPOlS.KyLj81XMLWkO/ZH7JqeB1xeBmJzygZCHbD7Xni9Exy2"}]'
 
 sudo microk8s.enable metrics-server
-sudo git clone https://github.com/abola/2day_catalogs.git
+sudo git clone https://github.com/alanher120/2day_catalogs.git
 sudo microk8s.kubectl apply -f https://raw.githubusercontent.com/weaveworks/flagger/master/artifacts/flagger/crd.yaml
 #sudo microk8s.kubectl annotate daemonset nginx-ingress-microk8s-controller -n ingress prometheus.io/port=10254 prometheus.io/scrape=true
 
@@ -51,7 +51,7 @@ sudo microk8s.helm3 install flagger -n flagger --set=externalIp=${EXTERNAL_IP} .
 
 #sudo microk8s.kubectl patch daemonset nginx-ingress-microk8s-controller -n ingress --type='json' -p='[{"op": "add", "path": "/spec/template/metadata/annotations/prometheus.io~1port", "value": "10254"}]'
 #sudo microk8s.kubectl patch daemonset nginx-ingress-microk8s-controller -n ingress --type='json' -p='[{"op": "add", "path": "/spec/template/metadata/annotations/prometheus.io~1scrape", "value": "true"}]'
-sudo microk8s.kubectl patch daemonset nginx-ingress-microk8s-controller -n ingress --patch "$(curl -s https://raw.githubusercontent.com/abola/2day_example_python/master/patch/nginx-ingress.yaml)"
+sudo microk8s.kubectl patch daemonset nginx-ingress-microk8s-controller -n ingress --patch "$(curl -s https://raw.githubusercontent.com/alanher120/2day_example_python/master/patch/nginx-ingress.yaml)"
 sudo microk8s.kubectl patch daemonset nginx-ingress-microk8s-controller -n ingress --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/ports/-", "value": {"containerPort": 10254}}]'
 
 sleep 5
