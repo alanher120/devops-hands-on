@@ -9,6 +9,7 @@ EMAIL=
 # 如果您的環境不是在 GCP 請自行調整以下變數
 EXTERNAL_IP=$(curl -s 169.254.169.254/computeMetadata/v1beta1/instance/network-interfaces/0/access-configs/0/external-ip)
 
+echo "安裝 microk8s 服務 ..."
 sudo snap install microk8s --channel=1.18 --classic
 sudo microk8s.enable dns dashboard storage ingress helm3 rbac 
 
@@ -39,16 +40,21 @@ sudo microk8s.kubectl wait --for=condition=ready --timeout=120s pods -l app=ranc
 echo "系統參數設定中 ... "
 sleep 3
 
+# 設定 admin password 為 systex
 sudo microk8s.kubectl patch $(sudo microk8s.kubectl get user.management.cattle.io -l authz.management.cattle.io/bootstrapping=admin-user -o name) --type='json' -p '[{"op":"replace","path":"/mustChangePassword","value":false},{"op":"replace","path":"/password","value":"$2a$10$7BhfjPOlS.KyLj81XMLWkO/ZH7JqeB1xeBmJzygZCHbD7Xni9Exy2"}]'
 
+# 開啟 metrics
 sudo microk8s.enable metrics-server
 sudo git clone https://github.com/alanher120/2day_catalogs.git
+
+# 安裝 flagger 金絲雀, 藍/綠部屬 工具
 sudo microk8s.kubectl apply -f https://raw.githubusercontent.com/weaveworks/flagger/master/artifacts/flagger/crd.yaml
 #sudo microk8s.kubectl annotate daemonset nginx-ingress-microk8s-controller -n ingress prometheus.io/port=10254 prometheus.io/scrape=true
 
 sudo microk8s.kubectl create ns flagger
 sudo microk8s.helm3 install flagger -n flagger --set=externalIp=${EXTERNAL_IP} ./2day_catalogs/charts/flagger-server/0.27.0/
 
+# 設定 prometheus 
 #sudo microk8s.kubectl patch daemonset nginx-ingress-microk8s-controller -n ingress --type='json' -p='[{"op": "add", "path": "/spec/template/metadata/annotations/prometheus.io~1port", "value": "10254"}]'
 #sudo microk8s.kubectl patch daemonset nginx-ingress-microk8s-controller -n ingress --type='json' -p='[{"op": "add", "path": "/spec/template/metadata/annotations/prometheus.io~1scrape", "value": "true"}]'
 sudo microk8s.kubectl patch daemonset nginx-ingress-microk8s-controller -n ingress --patch "$(curl -s https://raw.githubusercontent.com/alanher120/2day_example_python/master/patch/nginx-ingress.yaml)"
